@@ -31,6 +31,7 @@ main/
 
 ## 🚀 Quick Start
 
+**📥 Download Model**: [Google Drive](https://drive.google.com/drive/folders/1s4JPTj3K5nvwP1XI6yHi5PfyWsqVBBfr)
 ### Using Docker (Recommended)
 ```bash
 # Start the system
