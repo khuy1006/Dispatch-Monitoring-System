@@ -21,8 +21,18 @@ class Config:
         self.CONFIDENCE_THRESHOLD = float(os.getenv('CONFIDENCE_THRESHOLD', '0.5'))
         self.CLASSIFICATION_THRESHOLD = float(os.getenv('CLASSIFICATION_THRESHOLD', '0.3'))
         
-        # Database settings
-        self.DATABASE_PATH = os.getenv('DATABASE_PATH', 'data/monitoring.db')
+        # Database settings - ensure parent directory exists
+        default_db_path = 'data/monitoring.db'
+        self.DATABASE_PATH = os.getenv('DATABASE_PATH', default_db_path)
+        
+        # Ensure database directory exists
+        db_path = Path(self.DATABASE_PATH)
+        try:
+            db_path.parent.mkdir(parents=True, exist_ok=True)
+        except (PermissionError, OSError) as e:
+            print(f"Warning: Cannot create database directory {db_path.parent}: {e}")
+            # Fallback to current directory
+            self.DATABASE_PATH = db_path.name
         
         # Model improvement settings
         self.MIN_FEEDBACK_FOR_RETRAINING = int(os.getenv('MIN_FEEDBACK_FOR_RETRAINING', '100'))
@@ -33,10 +43,19 @@ class Config:
         self.MODELS_DIR = Path('models')
         self.FEEDBACK_DIR = Path('data/feedback')
         
-        # Create directories if they don't exist
-        self.DATA_DIR.mkdir(exist_ok=True)
-        self.MODELS_DIR.mkdir(exist_ok=True)
-        self.FEEDBACK_DIR.mkdir(exist_ok=True)
+        # Create directories if they don't exist - with error handling
+        self._create_directory_safe(self.DATA_DIR)
+        self._create_directory_safe(self.MODELS_DIR)
+        self._create_directory_safe(self.FEEDBACK_DIR)
+    
+    def _create_directory_safe(self, directory_path):
+        """Safely create directory with error handling"""
+        try:
+            directory_path.mkdir(parents=True, exist_ok=True)
+            print(f"Directory created/verified: {directory_path}")
+        except (PermissionError, OSError) as e:
+            print(f"Warning: Cannot create directory {directory_path}: {e}")
+            print(f"Please ensure you have write permissions or create the directory manually.")
         
         # Web interface settings
         self.WEB_HOST = os.getenv('WEB_HOST', '0.0.0.0')

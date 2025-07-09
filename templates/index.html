@@ -308,6 +308,42 @@
             background: #e53e3e;
         }
 
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+        }
+
+        .external-file-input {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            margin: 10px 0;
+        }
+
+        .external-file-input input[type="text"] {
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            padding: 8px;
+        }
+
+        .external-file-input input[type="text"]:focus {
+            outline: none;
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -443,10 +479,17 @@
                 </div>
                 <div class="controls">
                     <div class="input-group">
-                        <button class="btn btn-success" onclick="selectVideoFile()">Load Video File</button>
+                        <button class="btn btn-success" onclick="selectVideoFile()">Upload Video File</button>
+                        <button class="btn btn-info" onclick="browseExternalFile()">Browse External File</button>
                         <button class="btn btn-primary" onclick="startMonitoring()">Start Monitoring</button>
                         <button class="btn btn-danger" onclick="stopMonitoring()">Stop</button>
                         <input type="file" id="videoFileInput" accept="video/*" style="display: none;" onchange="handleFileSelect()">
+                    </div>
+                    <div class="external-file-input" style="margin: 10px 0; display: none;">
+                        <input type="text" id="externalFilePath" placeholder="Enter full path to video file (e.g., C:\Videos\video.mp4)" 
+                               style="width: 70%; padding: 8px; margin-right: 10px;" 
+                               onkeypress="handleEnterKey(event)">
+                        <button class="btn btn-secondary" onclick="validateExternalFile()">Load External File</button>
                     </div>
                     <div>
                         <span class="status-indicator" id="statusIndicator"></span>
@@ -540,20 +583,104 @@
             const file = fileInput.files[0];
             
             if (file) {
-                const fileName = file.name;
-                const filePath = `data/${fileName}`;
+                uploadVideoFile(file);
+            }
+        }
+
+        // Upload video file to server
+        async function uploadVideoFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                showAlert('Uploading video file...', 'info');
                 
-                // Show success message and instructions
-                showAlert(`Video file "${fileName}" selected. Click "Start Monitoring" to begin analysis.`, 'success');
+                const response = await fetch('/api/upload_video', {
+                    method: 'POST',
+                    body: formData
+                });
                 
-                // Store selected file path for monitoring
-                window.selectedVideoFile = filePath;
+                const result = await response.json();
                 
-                // Update button text to show selected file
-                const startBtn = document.querySelector('.btn-primary');
-                startBtn.textContent = 'Start Video Analysis';
+                if (result.status === 'success') {
+                    showAlert(`Video file "${result.filename}" uploaded successfully!`, 'success');
+                    
+                    // Store uploaded file path for monitoring
+                    window.selectedVideoFile = result.file_path;
+                    
+                    // Update button text to show selected file
+                    const startBtn = document.querySelector('.btn-primary');
+                    startBtn.textContent = 'Start Video Analysis';
+                    
+                    console.log('Uploaded file:', result.file_path);
+                } else {
+                    showAlert(`Upload failed: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                showAlert('Upload failed: Network error', 'error');
+            }
+        }
+
+        // Browse external file
+        function browseExternalFile() {
+            const externalFileDiv = document.querySelector('.external-file-input');
+            if (externalFileDiv.style.display === 'none') {
+                externalFileDiv.style.display = 'block';
+            } else {
+                externalFileDiv.style.display = 'none';
+            }
+        }
+
+        // Handle Enter key press in external file input
+        function handleEnterKey(event) {
+            if (event.key === 'Enter') {
+                validateExternalFile();
+            }
+        }
+
+        // Validate external file path
+        async function validateExternalFile() {
+            const externalPath = document.getElementById('externalFilePath').value.trim();
+            
+            if (!externalPath) {
+                showAlert('Please enter a file path', 'error');
+                return;
+            }
+            
+            try {
+                showAlert('Validating external file...', 'info');
                 
-                console.log('Selected file:', file.name);
+                const response = await fetch('/api/browse_external_file', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ path: externalPath })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert(`External file "${result.filename}" validated successfully!`, 'success');
+                    
+                    // Store external file path for monitoring
+                    window.selectedVideoFile = result.file_path;
+                    
+                    // Update button text to show selected file
+                    const startBtn = document.querySelector('.btn-primary');
+                    startBtn.textContent = 'Start Video Analysis';
+                    
+                    // Hide the external file input
+                    document.querySelector('.external-file-input').style.display = 'none';
+                    
+                    console.log('External file validated:', result.file_path);
+                } else {
+                    showAlert(`Validation failed: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Validation error:', error);
+                showAlert('Validation failed: Network error', 'error');
             }
         }
 

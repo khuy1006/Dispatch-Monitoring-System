@@ -18,14 +18,35 @@ from components.visualizer import Visualizer
 from config import Config
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('data/monitoring.log') if Path('data').exists() else logging.NullHandler()
+def setup_logging():
+    """Setup logging with fallback for log file location"""
+    handlers = [logging.StreamHandler()]
+    
+    # Try to create log file in data directory, fallback to current directory
+    log_file_paths = [
+        Path('data/monitoring.log'),
+        Path('logs/monitoring.log'),
+        Path('monitoring.log')
     ]
-)
+    
+    for log_path in log_file_paths:
+        try:
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            handler = logging.FileHandler(str(log_path))
+            handlers.append(handler)
+            print(f"Logging to: {log_path.resolve()}")
+            break
+        except (PermissionError, OSError) as e:
+            print(f"Cannot write to {log_path}: {e}")
+            continue
+    
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=handlers
+    )
+
+setup_logging()
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
@@ -175,11 +196,34 @@ class DispatchMonitoringSystem:
                     source = int(source)  # Convert string number to int for camera
                     self.is_video_file = False
                 elif not source.startswith(('http://', 'https://', 'rtsp://')):
-                    # It's a file path, check if it exists
-                    if not Path(source).exists():
+                    # It's a file path - support both absolute and relative paths
+                    file_path = Path(source)
+                    
+                    # If it's a relative path that doesn't exist, try in data directory
+                    if not file_path.is_absolute() and not file_path.exists():
+                        data_path = Path('data') / source
+                        if data_path.exists():
+                            file_path = data_path
+                            source = str(file_path)  # Update source to full path
+                    
+                    # Final check if file exists
+                    if not file_path.exists():
                         logger.error(f"Video file not found: {source}")
+                        logger.error(f"Checked paths: {[str(Path(source)), str(Path('data') / source)]}")
                         return False
-                    logger.info(f"Loading video file: {source}")
+                    
+                    # Check if file is readable
+                    try:
+                        with open(file_path, 'rb') as f:
+                            pass
+                    except PermissionError:
+                        logger.error(f"Permission denied accessing file: {source}")
+                        return False
+                    except Exception as e:
+                        logger.error(f"Error accessing file {source}: {e}")
+                        return False
+                    
+                    logger.info(f"Loading video file: {file_path.resolve()}")
                     self.is_video_file = True
                 else:
                     # Stream URL
@@ -789,6 +833,100 @@ def submit_feedback_correction():
             return jsonify({'status': 'error', 'message': message}), 400
             
     except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/upload_video', methods=['POST'])
+def upload_video():
+    """Upload video file to the system"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'status': 'error', 'message': 'No file provided'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'status': 'error', 'message': 'No file selected'}), 400
+        
+        # Check if file is a video
+        allowed_extensions = {'.mp4', '.avi', '.mov', '.mkv', '.flv', '.wmv', '.webm', '.m4v'}
+        file_ext = Path(file.filename).suffix.lower()
+        
+        if file_ext not in allowed_extensions:
+            return jsonify({'status': 'error', 
+                          'message': f'Invalid file type. Allowed: {", ".join(allowed_extensions)}'}), 400
+        
+        # Create uploads directory if it doesn't exist
+        uploads_dir = Path('data/uploads')
+        uploads_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Generate unique filename to avoid conflicts
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{timestamp}_{file.filename}"
+        file_path = uploads_dir / filename
+        
+        # Save the file
+        file.save(str(file_path))
+        
+        logger.info(f"Video file uploaded: {file_path}")
+        
+        return jsonify({
+            'status': 'success', 
+            'message': 'File uploaded successfully',
+            'file_path': str(file_path),
+            'filename': filename
+        })
+        
+    except Exception as e:
+        logger.error(f"Error uploading file: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/browse_external_file', methods=['POST'])
+def browse_external_file():
+    """Handle external file path for video processing"""
+    try:
+        data = request.json or {}
+        external_path = data.get('path')
+        
+        if not external_path:
+            return jsonify({'status': 'error', 'message': 'No file path provided'}), 400
+        
+        file_path = Path(external_path)
+        
+        # Check if file exists and is accessible
+        if not file_path.exists():
+            return jsonify({'status': 'error', 'message': f'File not found: {external_path}'}), 404
+        
+        if not file_path.is_file():
+            return jsonify({'status': 'error', 'message': f'Path is not a file: {external_path}'}), 400
+        
+        # Check if file is readable
+        try:
+            with open(file_path, 'rb') as f:
+                pass
+        except PermissionError:
+            return jsonify({'status': 'error', 'message': f'Permission denied: {external_path}'}), 403
+        except Exception as e:
+            return jsonify({'status': 'error', 'message': f'Error accessing file: {e}'}), 500
+        
+        # Check if it's a video file
+        allowed_extensions = {'.mp4', '.avi', '.mov', '.mkv', '.flv', '.wmv', '.webm', '.m4v'}
+        file_ext = file_path.suffix.lower()
+        
+        if file_ext not in allowed_extensions:
+            return jsonify({'status': 'error', 
+                          'message': f'Invalid file type. Allowed: {", ".join(allowed_extensions)}'}), 400
+        
+        logger.info(f"External video file validated: {file_path.resolve()}")
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'File validated successfully',
+            'file_path': str(file_path.resolve()),
+            'filename': file_path.name,
+            'size': file_path.stat().st_size
+        })
+        
+    except Exception as e:
+        logger.error(f"Error validating external file: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 if __name__ == '__main__':
