@@ -1,0 +1,399 @@
+# =============================================================================
+# EatLab - Food Detection & Classification System
+# Git Ignore Configuration
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Python
+# -----------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+training_env/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# -----------------------------------------------------------------------------
+# Data Files
+# -----------------------------------------------------------------------------
+# Video files
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.flv
+*.wmv
+*.webm
+
+# Image files (keep small examples, ignore large datasets)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.tif
+*.webp
+*.svg
+
+# Allow specific small images (logos, examples, etc.)
+!**/examples/*.jpg
+!**/examples/*.png
+!**/static/*.png
+!**/static/*.jpg
+!docs/**/*.png
+!docs/**/*.jpg
+
+# Large datasets
+data/
+data_*/
+dataset/
+datasets/
+raw_data/
+processed_data/
+
+# Keep empty directories and README files
+!data/.gitkeep
+!data/README.md
+!dataset/.gitkeep
+!dataset/README.md
+
+# -----------------------------------------------------------------------------
+# Machine Learning Models
+# -----------------------------------------------------------------------------
+# YOLO models
+*.pt
+*.pth
+*.onnx
+*.engine
+*.trt
+
+# Other ML model formats
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.joblib
+*.model
+
+# Training artifacts
+runs/
+wandb/
+mlruns/
+lightning_logs/
+tensorboard_logs/
+
+# Training outputs
+dish_classification_split/
+results/
+checkpoints/
+experiments/
+
+# Allow model config files
+!models/.gitkeep
+!models/README.md
+!models/config.yaml
+
+# -----------------------------------------------------------------------------
+# Logs and Monitoring
+# -----------------------------------------------------------------------------
+# Log files
+*.log
+logs/
+log/
+*.log.*
+
+# Monitoring data
+*.db
+*.sqlite
+*.sqlite3
+monitoring.db
+
+# Grafana
+grafana/data/
+grafana/logs/
+
+# -----------------------------------------------------------------------------
+# Docker
+# -----------------------------------------------------------------------------
+# Docker files to keep
+!Dockerfile
+!docker-compose.yml
+!docker-compose.*.yml
+!.dockerignore
+
+# Docker volumes and data
+docker/data/
+docker/logs/
+docker/volumes/
+
+# -----------------------------------------------------------------------------
+# IDE and Editor
+# -----------------------------------------------------------------------------
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# PyCharm
+.idea/
+*.swp
+*.swo
+*~
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*.swn
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+
+# -----------------------------------------------------------------------------
+# Operating System
+# -----------------------------------------------------------------------------
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# -----------------------------------------------------------------------------
+# Temporary Files
+# -----------------------------------------------------------------------------
+# Temporary directories
+tmp/
+temp/
+.tmp/
+.temp/
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Archive files
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# Allow specific archives (releases, etc.)
+!releases/*.zip
+!releases/*.tar.gz
+
+# -----------------------------------------------------------------------------
+# Configuration and Secrets
+# -----------------------------------------------------------------------------
+# Environment variables
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# API keys and secrets
+secrets.yaml
+secrets.json
+config/secrets/
+.secrets/
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
+ssl/
+certs/
+
+# Allow public certificates
+!ssl/public/
+!certs/public/
+
+# -----------------------------------------------------------------------------
+# Application Specific
+# -----------------------------------------------------------------------------
+# FastAPI/Flask uploads
+uploads/
+upload/
+static/uploads/
+
+# Cache directories
+.cache/
+cache/
+.mypy_cache/
+
+# Session data
+sessions/
+.sessions/
+
+# PID files
+*.pid
+
+# -----------------------------------------------------------------------------
+# Documentation Build
+# -----------------------------------------------------------------------------
+# Sphinx documentation
+docs/_build/
+docs/build/
+
+# -----------------------------------------------------------------------------
+# Testing
+# -----------------------------------------------------------------------------
+# Test outputs
+test_results/
+test_reports/
+coverage_html_report/
+
+# -----------------------------------------------------------------------------
+# Keep Important Files
+# -----------------------------------------------------------------------------
+# Ensure these are not ignored
+!README.md
+!LICENSE
+!requirements.txt
+!setup.py
+!pyproject.toml
+!Makefile
+!docker-compose.yml
+!.github/
+!docs/
+!tests/
+!scripts/
+!config.yaml
+!config.yml 

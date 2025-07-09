@@ -1,0 +1,36 @@
+# Configuration for YOLO Classification Training
+
+# Data paths
+data:
+  source_dir: "../data_wrong"
+  output_dir: "dish_classification_split"
+  classes: ["empty", "kakigori", "not_empty"]
+
+# Data split ratios
+split:
+  train_ratio: 0.8
+  val_ratio: 0.1
+  test_ratio: 0.1
+
+# Data augmentation types
+augmentation:
+  enabled: true
+  types:
+    - "flip_horizontal"
+    - "rotate_random"
+    - "blur" 
+    - "noise"
+
+# Training parameters
+training:
+  model_name: "yolo11n-cls.pt" # Path to model
+  epochs: 100
+  patience: 5
+  device: 0  # 0 for first GPU, 'cpu' for CPU
+  batch_size: 64
+  
+# Logging
+logging:
+  level: "INFO"
+  save_logs: true
+  log_file: "training.log" 

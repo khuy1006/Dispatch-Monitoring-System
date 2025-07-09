@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispatch Monitoring System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .video-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .video-header {
+            background: #4a5568;
+            color: white;
+            padding: 1rem;
+            font-weight: bold;
+        }
+
+        .video-stream {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-stream img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .video-placeholder {
+            color: #888;
+            font-size: 1.2rem;
+        }
+
+        .controls {
+            padding: 1rem;
+            background: #f8f9fa;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3182ce;
+        }
+
+        .btn-danger {
+            background: #e53e3e;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c53030;
+        }
+
+        .btn-success {
+            background: #38a169;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #2f855a;
+        }
+
+        .btn-warning {
+            background: #d69e2e;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #b7791f;
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 1rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .video-controls {
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            padding: 0.5rem 1rem;
+        }
+
+        .video-controls input[type="range"] {
+            flex: 1;
+            margin: 0 1rem;
+        }
+
+        .video-info {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .detection-log-content {
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .detection-log-list {
+            width: 100%;
+        }
+
+        .log-item-header {
+            display: grid;
+            grid-template-columns: 50px 80px 80px 60px 80px;
+            gap: 10px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .log-item {
+            display: grid;
+            grid-template-columns: 50px 80px 80px 60px 80px;
+            gap: 10px;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.8rem;
+            align-items: center;
+        }
+
+        .log-item:hover {
+            background: #f8f9fa;
+        }
+
+        .log-item.corrected {
+            background: #d4edda;
+        }
+
+        .feedback-form {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-group input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .stats-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .stats-header {
+            background: #38a169;
+            color: white;
+            padding: 1rem;
+            font-weight: bold;
+        }
+
+        .stats-content {
+            padding: 1.5rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #333;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        .status-active {
+            background: #38a169;
+            animation: pulse 2s infinite;
+        }
+
+        .status-inactive {
+            background: #e53e3e;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .feedback-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .feedback-header {
+            background: #ed8936;
+            color: white;
+            padding: 1rem;
+            font-weight: bold;
+        }
+
+        .feedback-form {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #feb2b2;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4299e1;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🍽️ Dispatch Monitoring System</h1>
+        <p>Commercial Kitchen - Real-time Item Tracking & Classification</p>
+    </div>
+
+    <div class="container">
+        <div class="dashboard">
+            <!-- Video Stream Section -->
+            <div class="video-container">
+                <div class="video-header">
+                    📹 Live Video Stream
+                </div>
+                <div class="video-stream">
+                    <img id="videoStream" src="/video_feed" alt="Video Stream" style="display: none;" 
+                         onload="handleVideoLoad()" onerror="handleVideoError()">
+                    <div id="videoPlaceholder" class="video-placeholder">
+                        <p>Video stream will appear here when monitoring starts</p>
+                        <p id="videoStatus">Ready to start monitoring</p>
+                    </div>
+                </div>
+                <div class="controls">
+                    <div class="input-group">
+                        <button class="btn btn-success" onclick="selectVideoFile()">Load Video File</button>
+                        <button class="btn btn-primary" onclick="startMonitoring()">Start Monitoring</button>
+                        <button class="btn btn-danger" onclick="stopMonitoring()">Stop</button>
+                        <input type="file" id="videoFileInput" accept="video/*" style="display: none;" onchange="handleFileSelect()">
+                    </div>
+                    <div>
+                        <span class="status-indicator" id="statusIndicator"></span>
+                        <span id="statusText">Inactive</span>
+                    </div>
+                </div>
+                
+                <!-- Video Controls (for video files) -->
+                <div id="videoControls" class="video-controls" style="display: none;">
+                    <div class="controls">
+                        <button class="btn btn-primary" onclick="pauseResumeVideo()" id="pauseResumeBtn">Pause</button>
+                        <input type="range" id="videoSeeker" min="0" max="100" value="0" onchange="seekVideo(this.value)">
+                        <span id="videoTime">00:00 / 00:00</span>
+                    </div>
+                    <div id="videoInfo" class="video-info"></div>
+                </div>
+            </div>
+
+            <!-- Detection Log Panel -->
+            <div class="stats-panel">
+                <div class="stats-header">
+                    🔍 Detection Log <span id="logUpdateStatus" style="font-size: 0.8em; color: #ddd;">●</span>
+                </div>
+                <div class="detection-log-content">
+                    <div id="detectionLogList" class="detection-log-list">
+                        <div class="log-item-header">
+                            <span>ID</span>
+                            <span>Detect</span>
+                            <span>State</span>
+                            <span>Time</span>
+                            <span>Action</span>
+                        </div>
+                        <div id="logEntries">
+                            <!-- Log entries will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Feedback Form -->
+                    <div id="feedbackForm" class="feedback-form" style="display: none;">
+                        <h4>Correct Classification for ID: <span id="feedbackTrackId"></span></h4>
+                        <div class="form-group">
+                            <label for="correctClassSelect">Correct State:</label>
+                            <select id="correctClassSelect">
+                                <option value="empty">Empty</option>
+                                <option value="kakigori">Kakigori</option>
+                                <option value="not_empty">Not Empty</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-success" onclick="submitCorrection()">Submit</button>
+                            <button class="btn btn-secondary" onclick="cancelCorrection()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Control Panel - Removed unnecessary buttons -->
+            <div class="control-panel" style="display: none;">
+                <!-- Controls removed for cleaner interface -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isMonitoring = false;
+        let statsInterval;
+
+        // Handle video loading and errors
+        function handleVideoLoad() {
+            console.log("Video stream loaded successfully");
+        }
+
+        function handleVideoError() {
+            console.log("Video stream error, retrying...");
+            // Retry loading after a delay
+            setTimeout(() => {
+                const videoStream = document.getElementById('videoStream');
+                if (videoStream && isMonitoring) {
+                    videoStream.src = '/video_feed?' + new Date().getTime();
+                }
+            }, 2000);
+        }
+
+        // File selection for video upload
+        function selectVideoFile() {
+            document.getElementById('videoFileInput').click();
+        }
+
+        function handleFileSelect() {
+            const fileInput = document.getElementById('videoFileInput');
+            const file = fileInput.files[0];
+            
+            if (file) {
+                const fileName = file.name;
+                const filePath = `data/${fileName}`;
+                
+                // Show success message and instructions
+                showAlert(`Video file "${fileName}" selected. Click "Start Monitoring" to begin analysis.`, 'success');
+                
+                // Store selected file path for monitoring
+                window.selectedVideoFile = filePath;
+                
+                // Update button text to show selected file
+                const startBtn = document.querySelector('.btn-primary');
+                startBtn.textContent = 'Start Video Analysis';
+                
+                console.log('Selected file:', file.name);
+            }
+        }
+
+        // Update status indicator
+        function updateStatus(active) {
+            const indicator = document.getElementById('statusIndicator');
+            const text = document.getElementById('statusText');
+            const videoStream = document.getElementById('videoStream');
+            const placeholder = document.getElementById('videoPlaceholder');
+            const videoStatus = document.getElementById('videoStatus');
+            
+            if (active) {
+                indicator.className = 'status-indicator status-active';
+                text.textContent = 'Active';
+                videoStream.style.display = 'block';
+                placeholder.style.display = 'none';
+                
+                // Force reload the video stream
+                videoStream.src = '/video_feed?' + new Date().getTime();
+            } else {
+                indicator.className = 'status-indicator status-inactive';
+                text.textContent = 'Inactive';
+                videoStream.style.display = 'none';
+                placeholder.style.display = 'block';
+                videoStatus.textContent = 'Ready to start monitoring';
+            }
+        }
+
+        // Start monitoring
+        async function startMonitoring() {
+            // Use selected video file if available, otherwise default to webcam
+            const source = window.selectedVideoFile || '0';
+            const videoStatus = document.getElementById('videoStatus');
+            const isVideoFile = window.selectedVideoFile ? true : false;
+            
+            try {
+                if (isVideoFile) {
+                    videoStatus.textContent = `Starting video analysis: ${window.selectedVideoFile.split('/').pop()}`;
+                } else {
+                    videoStatus.textContent = 'Starting webcam monitoring...';
+                }
+                
+                const response = await fetch('/api/start_monitoring', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ source: source })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    isMonitoring = true;
+                    updateStatus(true);
+                    startStatsUpdate();
+                    console.log('About to start detection log updates...');
+                    startDetectionLogUpdate();
+                    console.log('Detection log updates started');
+                    videoStatus.textContent = `Monitoring: ${source}`;
+                    showAlert('Monitoring started successfully!', 'success');
+                    
+                    // Update video info and controls
+                    setTimeout(updateVideoInfo, 1000);
+                    
+                    // Start video info update interval for video files
+                    setInterval(updateVideoInfo, 2000);
+                } else {
+                    videoStatus.textContent = 'Failed to start monitoring';
+                    showAlert('Failed to start monitoring: ' + result.message, 'error');
+                }
+            } catch (error) {
+                videoStatus.textContent = 'Error starting monitoring';
+                showAlert('Error starting monitoring: ' + error.message, 'error');
+            }
+        }
+
+        // Stop monitoring
+        async function stopMonitoring() {
+            try {
+                const response = await fetch('/api/stop_monitoring', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    isMonitoring = false;
+                    updateStatus(false);
+                    stopStatsUpdate();
+                    stopDetectionLogUpdate();
+                    document.getElementById('videoControls').style.display = 'none';
+                    
+                    // Reset UI elements
+                    window.selectedVideoFile = null;
+                    const startBtn = document.querySelector('.btn-primary');
+                    startBtn.textContent = 'Start Monitoring';
+                    
+                    showAlert('Monitoring stopped successfully!', 'success');
+                } else {
+                    showAlert('Failed to stop monitoring: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Error stopping monitoring: ' + error.message, 'error');
+            }
+        }
+
+        // Update basic statistics (minimal)
+        async function updateStats() {
+            // Stats not displayed anymore, detection log is the main feature
+        }
+
+        // Start stats update interval
+        function startStatsUpdate() {
+            updateStats(); // Initial update
+            statsInterval = setInterval(updateStats, 1000);
+        }
+
+        // Stop stats update interval
+        function stopStatsUpdate() {
+            if (statsInterval) {
+                clearInterval(statsInterval);
+            }
+        }
+
+        // Detection log update interval
+        let detectionLogInterval;
+        
+        // Start detection log update interval
+        function startDetectionLogUpdate() {
+            console.log('Starting detection log update interval...');
+            updateDetectionLog(); // Initial update
+            
+            // Stop any existing interval first
+            if (detectionLogInterval) {
+                clearInterval(detectionLogInterval);
+            }
+            
+            detectionLogInterval = setInterval(updateDetectionLog, 1000); // Update every 1 second for better responsiveness
+            console.log('Detection log interval started with ID:', detectionLogInterval);
+        }
+        
+        // Stop detection log update interval
+        function stopDetectionLogUpdate() {
+            if (detectionLogInterval) {
+                console.log('Stopping detection log interval:', detectionLogInterval);
+                clearInterval(detectionLogInterval);
+                detectionLogInterval = null;
+            }
+        }
+
+        // Show alert message
+        function showAlert(message, type) {
+            // Create temporary alert if no element exists
+            let alertEl = document.getElementById('alert');
+            if (!alertEl) {
+                alertEl = document.createElement('div');
+                alertEl.id = 'alert';
+                alertEl.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 15px 20px;
+                    border-radius: 5px;
+                    z-index: 1000;
+                    font-weight: bold;
+                `;
+                document.body.appendChild(alertEl);
+            }
+            
+            alertEl.className = `alert alert-${type}`;
+            alertEl.textContent = message;
+            alertEl.style.display = 'block';
+            
+            if (type === 'success') {
+                alertEl.style.backgroundColor = '#38a169';
+                alertEl.style.color = 'white';
+            } else {
+                alertEl.style.backgroundColor = '#e53e3e';
+                alertEl.style.color = 'white';
+            }
+            
+            setTimeout(() => {
+                alertEl.style.display = 'none';
+            }, 5000);
+        }
+
+        // Reset statistics
+        async function resetStats() {
+            try {
+                const response = await fetch('/api/stats/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert('Statistics reset successfully!', 'success');
+                    updateStats(); // Refresh the display
+                } else {
+                    showAlert('Failed to reset statistics: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Error resetting statistics: ' + error.message, 'error');
+            }
+        }
+
+        // Video control variables
+        let videoInfo = null;
+        let videoPaused = false;
+        let currentTrackId = null;
+        
+        // Update detection log
+        async function updateDetectionLog() {
+            try {
+                console.log('Fetching detection log...');
+                
+                // Show update indicator
+                const statusEl = document.getElementById('logUpdateStatus');
+                if (statusEl) statusEl.style.color = '#ffeb3b'; // Yellow for updating
+                
+                const response = await fetch('/api/detection_log');
+                const result = await response.json();
+                
+                console.log('Detection log response:', result);
+                
+                if (result.status === 'success') {
+                    console.log('Displaying detection log data:', result.data);
+                    displayDetectionLog(result.data);
+                    
+                    // Show success indicator
+                    if (statusEl) statusEl.style.color = '#4caf50'; // Green for success
+                } else {
+                    console.error('Detection log API error:', result);
+                    if (statusEl) statusEl.style.color = '#f44336'; // Red for error
+                }
+            } catch (error) {
+                console.error('Error updating detection log:', error);
+                const statusEl = document.getElementById('logUpdateStatus');
+                if (statusEl) statusEl.style.color = '#f44336'; // Red for error
+            }
+        }
+        
+        // Display detection log
+        function displayDetectionLog(logData) {
+            console.log('displayDetectionLog called with:', logData);
+            const logEntriesEl = document.getElementById('logEntries');
+            
+            if (!logEntriesEl) {
+                console.error('logEntries element not found!');
+                return;
+            }
+            
+            if (!logData || logData.length === 0) {
+                console.log('No log data, showing placeholder');
+                logEntriesEl.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">No detections yet</div>';
+                return;
+            }
+            
+            console.log('Rendering log entries for', logData.length, 'items');
+            try {
+                const entriesHtml = logData.map(entry => {
+                    const correctedClass = entry.corrected ? 'corrected' : '';
+                    const actionButton = !entry.corrected ? 
+                        `<button class="btn btn-warning btn-sm" onclick="showFeedbackForm(${entry.id})">Edit</button>` :
+                        '<span style="color: green;">✓ Fixed</span>';
+                        
+                    return `
+                        <div class="log-item ${correctedClass}">
+                            <span>${entry.id}</span>
+                            <span>${entry.detect}</span>
+                            <span>${entry.state}</span>
+                            <span>${entry.timestamp}</span>
+                            <span>${actionButton}</span>
+                        </div>
+                    `;
+                }).join('');
+                
+                logEntriesEl.innerHTML = entriesHtml;
+                console.log('Log entries rendered successfully');
+            } catch (error) {
+                console.error('Error rendering log entries:', error);
+                logEntriesEl.innerHTML = '<div style="text-align: center; padding: 20px; color: #f00;">Error displaying log entries</div>';
+            }
+        }
+        
+        // Show feedback form for specific track ID
+        function showFeedbackForm(trackId) {
+            currentTrackId = trackId;
+            document.getElementById('feedbackTrackId').textContent = trackId;
+            document.getElementById('feedbackForm').style.display = 'block';
+        }
+        
+        // Cancel correction
+        function cancelCorrection() {
+            document.getElementById('feedbackForm').style.display = 'none';
+            currentTrackId = null;
+        }
+        
+        // Submit correction
+        async function submitCorrection() {
+            if (!currentTrackId) return;
+            
+            const correctClass = document.getElementById('correctClassSelect').value;
+            
+            try {
+                const response = await fetch('/api/feedback_correction', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        track_id: currentTrackId,
+                        correct_class: correctClass
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert('Correction saved successfully!', 'success');
+                    updateDetectionLog(); // Refresh log
+                    cancelCorrection();
+                } else {
+                    showAlert('Failed to save correction: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Error saving correction: ' + error.message, 'error');
+            }
+        }
+        
+        // Update video info
+        async function updateVideoInfo() {
+            try {
+                const response = await fetch('/api/video/info');
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    videoInfo = result.data;
+                    
+                    // Show/hide video controls based on video type
+                    const controlsEl = document.getElementById('videoControls');
+                    if (videoInfo.is_video_file) {
+                        controlsEl.style.display = 'block';
+                        updateVideoControls();
+                    } else {
+                        controlsEl.style.display = 'none';
+                    }
+                } else {
+                    document.getElementById('videoControls').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error updating video info:', error);
+            }
+        }
+        
+        // Update video controls display
+        function updateVideoControls() {
+            if (!videoInfo || !videoInfo.is_video_file) return;
+            
+            const seekerEl = document.getElementById('videoSeeker');
+            const timeEl = document.getElementById('videoTime');
+            const pauseBtn = document.getElementById('pauseResumeBtn');
+            const infoEl = document.getElementById('videoInfo');
+            
+            // Update seeker
+            if (videoInfo.total_frames > 0) {
+                seekerEl.max = videoInfo.total_frames - 1;
+                seekerEl.value = videoInfo.current_frame;
+            }
+            
+            // Update time display
+            const currentTime = formatTime(videoInfo.current_time);
+            const totalTime = formatTime(videoInfo.duration_seconds);
+            timeEl.textContent = `${currentTime} / ${totalTime}`;
+            
+            // Update pause/resume button
+            pauseBtn.textContent = videoInfo.is_paused ? 'Resume' : 'Pause';
+            
+            // Update info
+            infoEl.textContent = `${videoInfo.width}x${videoInfo.height} @ ${videoInfo.fps.toFixed(1)} FPS`;
+        }
+        
+        // Format time in MM:SS format
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // Pause/Resume video
+        async function pauseResumeVideo() {
+            try {
+                const endpoint = videoPaused ? '/api/video/resume' : '/api/video/pause';
+                const response = await fetch(endpoint, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    videoPaused = !videoPaused;
+                    updateVideoInfo();
+                } else {
+                    showAlert('Failed to control video: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Error controlling video: ' + error.message, 'error');
+            }
+        }
+        
+        // Seek video to specific frame
+        async function seekVideo(frameNumber) {
+            try {
+                const response = await fetch('/api/video/seek', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ frame: parseInt(frameNumber) })
+                });
+                
+                const result = await response.json();
+                if (result.status !== 'success') {
+                    showAlert('Failed to seek video: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Error seeking video: ' + error.message, 'error');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus(false);
+            updateStats();
+            
+            // Always start detection log update on page load
+            console.log('Starting detection log updates on page load...');
+            startDetectionLogUpdate();
+            
+            // Update stats every 5 seconds even when not monitoring
+            setInterval(updateStats, 5000);
+        });
+    </script>
+</body>
+</html>
